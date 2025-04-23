@@ -1,169 +1,133 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>cool_discord_sender.com</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ideas Thingy</title>
     <style>
-      /* Full-screen background with animated gradient */
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        flex-direction: column;
-        background: linear-gradient(45deg, #ff0044, #00b7ff, #7a00ff, #ffb700);
-        background-size: 400% 400%;
-        animation: gradientAnimation 10s ease infinite;
-        color: white;
-      }
-
-      /* Animation for smooth gradient transition */
-      @keyframes gradientAnimation {
-        0% {
-          background-position: 0% 50%;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2a2a2a;
+            color: #fff;
+            text-align: center;
+            padding-top: 50px;
         }
-        50% {
-          background-position: 100% 50%;
+        h1 {
+            font-size: 2em;
         }
-        100% {
-          background-position: 0% 50%;
+        #ideaBox {
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            background-color: #333;
+            border-radius: 5px;
+            border: 2px solid #444;
+            color: white;
+            font-size: 1.2em;
         }
-      }
-
-      h1 {
-        margin-bottom: 20px;
-        text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
-      }
-
-      .cool-textbox {
-        padding: 10px 15px;
-        border: 4px solid #00ffd5;
-        border-radius: 10px;
-        background-color: #2b2b2b;
-        color: white;
-        font-size: 16px;
-        width: 300px;
-        outline: none;
-        margin-bottom: 10px;
-      }
-
-      .send-btn {
-        padding: 10px 20px;
-        border: none;
-        background-color: #00ffd5;
-        color: #1e1e1e;
-        font-weight: bold;
-        font-size: 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-      }
-
-      .send-btn.disabled {
-        background-color: #ff4d4d; /* Red if disabled */
-        cursor: not-allowed;
-      }
-
-      /* Button hover effect */
-      .send-btn:hover:not(.disabled) {
-        background-color: #00ffb3;
-      }
-
-      /* Countdown timer on the button */
-      .countdown {
-        font-size: 14px;
-        margin-left: 10px;
-      }
+        #ideaBox input, #ideaBox button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+        }
+        #ideaBox input {
+            font-size: 1.1em;
+        }
+        #ideaBox button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+        #ideaBox button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            color: green;
+            font-size: 1.2em;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .error {
+            color: red;
+            font-size: 1.2em;
+            padding: 10px;
+            margin-top: 20px;
+        }
     </style>
-  </head>
-  <body>
-    <h1>Send a Message</h1>
-    <input type="text" id="messageInput" class="cool-textbox" placeholder="Type your message...">
-    <button class="send-btn" id="sendButton" onclick="sendMessage()">
-      Send to Discord <span class="countdown" id="countdown"></span>
-    </button>
+</head>
+<body>
+    <h1>Ideas Thingy</h1>
+    <div id="ideaBox">
+        <input type="text" id="ideaInput" placeholder="Type your idea here..." />
+        <button id="submitButton" onclick="submitIdea()">Submit Your Idea</button>
+    </div>
+    <div id="messageBox"></div>
 
     <script>
-      let countdownInterval; // Store countdown interval
-      let clickCount = 0; // Track the number of clicks
-      let firstClickTime = 0; // Time of the first click
+        const webhookUrl = 'https://discord.com/api/webhooks/1364630699386208346/aUvPjJNe288hDvEOcfQ2rEGcADu28kveRSGrZAr8dTEABgCNdu1pIQPS1a3q6qqPFDDY'; // Your webhook URL
+        let cooldown = false;
 
-      async function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const message = input.value.trim();
-        const sendButton = document.getElementById('sendButton');
-        const countdownElement = document.getElementById('countdown');
+        async function submitIdea() {
+            const input = document.getElementById('ideaInput');
+            const idea = input.value.trim();
 
-        const currentTime = Date.now();
-
-        // Track the time of the first click
-        if (clickCount === 0) {
-          firstClickTime = currentTime;
-        }
-
-        // Increment the click count
-        clickCount++;
-
-        // Check if the button was clicked more than once within 4.5 seconds
-        if (clickCount > 1 && currentTime - firstClickTime < 4500) {
-          // If clicked multiple times within 4.5 seconds, reload the page
-          location.reload();
-          return;
-        }
-
-        // If 4.5 seconds have passed, reset the click count
-        if (currentTime - firstClickTime >= 4500) {
-          clickCount = 1; // Reset click count to 1 (first click)
-        }
-
-        // Check if 5 seconds have passed since the last message
-        const lastMessageTime = localStorage.getItem('lastMessageTime');
-        if (!message) return; // Don't send if message is empty
-
-        if (lastMessageTime && currentTime - lastMessageTime < 5000) {
-          sendButton.classList.add('disabled'); // Disable the button and make it red
-          
-          let countdown = 5; // Start countdown from 5 seconds
-          countdownElement.textContent = `(${countdown}s)`; // Show countdown on the button
-
-          // Countdown every second
-          countdownInterval = setInterval(() => {
-            countdown--;
-            countdownElement.textContent = `(${countdown}s)`; // Update countdown on the button
-
-            if (countdown <= 0) {
-              clearInterval(countdownInterval); // Stop the countdown
-              sendButton.classList.remove('disabled'); // Re-enable the button
-              countdownElement.textContent = ''; // Clear countdown
+            if (!idea) {
+                displayMessage('Please enter a valid idea!', 'error');
+                return;
             }
-          }, 1000);
 
-          return; // Block sending the message
+            if (cooldown) {
+                displayMessage('Please wait 5 seconds before submitting again.', 'error');
+                return;
+            }
+
+            // Disable the button to prevent multiple submissions
+            const button = document.getElementById('submitButton');
+            button.disabled = true;
+
+            // Show a cooldown warning
+            cooldown = true;
+            setTimeout(() => {
+                cooldown = false;
+                button.disabled = false;
+            }, 5000); // 5 seconds cooldown
+
+            // Send the idea to Discord via Webhook
+            const payload = {
+                content: idea,
+                username: 'Idea Submitter', // Optional: Customize the bot's username
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                if (response.ok) {
+                    displayMessage('Idea submitted successfully!', 'success');
+                } else {
+                    displayMessage('Failed to submit idea. Try again later.', 'error');
+                }
+            } catch (err) {
+                displayMessage('An error occurred. Please try again later.', 'error');
+            }
+
+            // Clear input field after submission
+            input.value = '';
         }
 
-        // Update the last sent time
-        localStorage.setItem('lastMessageTime', currentTime);
-
-        const webhookUrl = "https://discord.com/api/webhooks/1364630699386208346/aUvPjJNe288hDvEOcfQ2rEGcADu28kveRSGrZAr8dTEABgCNdu1pIQPS1a3q6qqPFDDY";
-
-        try {
-          await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: message })
-          });
-          input.value = ''; // Clear input after sending the message
-        } catch (err) {
-          console.error("Failed to send message", err);
+        function displayMessage(message, type) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.innerHTML = `<div class="${type}">${message}</div>`;
         }
-      }
-
-      // Listen for Enter key to trigger send message
-      document.getElementById('messageInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') sendMessage();
-      });
     </script>
-  </body>
+</body>
 </html>
