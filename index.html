@@ -42,25 +42,35 @@
         border-radius: 8px;
         cursor: pointer;
       }
+
+      .send-btn.disabled {
+        background-color: #ff4d4d; /* Red if disabled */
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
     <h1>Send a Message</h1>
     <input type="text" id="messageInput" class="cool-textbox" placeholder="Type your message...">
-    <button class="send-btn" onclick="sendMessage()">Send to Discord</button>
+    <button class="send-btn" id="sendButton" onclick="sendMessage()">Send to Discord</button>
 
     <script>
       async function sendMessage() {
         const input = document.getElementById('messageInput');
         const message = input.value.trim();
-        if (!message) return;
+        const sendButton = document.getElementById('sendButton');
 
-        // Check if 1 second has passed since the last message
+        // Check if 5 seconds have passed since the last message
         const lastMessageTime = localStorage.getItem('lastMessageTime');
         const currentTime = Date.now();
 
-        // If the time difference is less than 1 second, block the message
-        if (lastMessageTime && currentTime - lastMessageTime < 1000) {
+        if (!message) return; // Don't send if message is empty
+
+        if (lastMessageTime && currentTime - lastMessageTime < 5000) {
+          sendButton.classList.add('disabled'); // Disable the button and make it red
+          setTimeout(() => {
+            sendButton.classList.remove('disabled'); // Re-enable the button after 5 seconds
+          }, 5000);
           return; // Block sending the message
         }
 
@@ -75,12 +85,13 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: message })
           });
-          input.value = '';
+          input.value = ''; // Clear input after sending the message
         } catch (err) {
           console.error("Failed to send message", err);
         }
       }
 
+      // Listen for Enter key to trigger send message
       document.getElementById('messageInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') sendMessage();
       });
