@@ -55,6 +55,18 @@
         const message = input.value.trim();
         if (!message) return;
 
+        // Check if 1 second has passed since the last message
+        const lastMessageTime = localStorage.getItem('lastMessageTime');
+        const currentTime = Date.now();
+
+        // If the time difference is less than 1 second, block the message
+        if (lastMessageTime && currentTime - lastMessageTime < 1000) {
+          return; // Block sending the message
+        }
+
+        // Update the last sent time
+        localStorage.setItem('lastMessageTime', currentTime);
+
         const webhookUrl = "https://discord.com/api/webhooks/1364620178364698797/jMHl4TvsOul2130KcWBw4UcPc5cLRw0nIRHaRYUvt-gv5BBWMoqcmDSsyXqSHKlzCUFS";
 
         try {
