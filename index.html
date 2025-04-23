@@ -7,13 +7,21 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #2a2a2a;
+      background: linear-gradient(-45deg, #2a2a2a, #1e1e1e, #333, #2c2c2c);
+      background-size: 400% 400%;
+      animation: gradientBG 8s ease infinite;
       color: #fff;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     h1 {
@@ -24,13 +32,13 @@
 
     #ideaBox {
       padding: 20px;
-      width: 80%;
+      width: 90%;
       max-width: 600px;
       background-color: #333;
-      border-radius: 5px;
-      border: 2px solid #444;
+      border-radius: 8px;
+      border: 3px solid #666;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
       color: white;
-      font-size: 1.2em;
       text-align: center;
     }
 
@@ -54,23 +62,20 @@
       font-size: 1.2em;
     }
 
-    #ideaBox button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
+    #ideaBox button.cooldown {
+      background-color: #a33;
     }
 
     .message {
       color: green;
-      font-size: 1.2em;
-      padding: 10px;
-      margin-top: 20px;
+      font-size: 1.1em;
+      padding-top: 10px;
     }
 
     .error {
       color: red;
-      font-size: 1.2em;
-      padding: 10px;
-      margin-top: 20px;
+      font-size: 1.1em;
+      padding-top: 10px;
     }
   </style>
 </head>
@@ -86,24 +91,33 @@
 
   <script>
     const webhookUrl = 'https://discord.com/api/webhooks/1364630699386208346/aUvPjJNe288hDvEOcfQ2rEGcADu28kveRSGrZAr8dTEABgCNdu1pIQPS1a3q6qqPFDDY';
-    let cooldown = false;
+    const cooldownTime = 5000;
+    const button = document.getElementById('submitButton');
+
+    function getRemainingCooldown() {
+      const lastSent = parseInt(localStorage.getItem('lastSent') || '0');
+      const now = Date.now();
+      return Math.max(0, cooldownTime - (now - lastSent));
+    }
 
     async function submitIdea() {
       const input = document.getElementById('ideaInput');
       const idea = input.value.trim();
-      const button = document.getElementById('submitButton');
+      const now = Date.now();
+      const lastSent = parseInt(localStorage.getItem('lastSent') || '0');
+      const timePassed = now - lastSent;
 
       if (!idea) {
         displayMessage('Please enter a valid idea!', 'error');
         return;
       }
 
-      if (cooldown) {
-        displayMessage('Please wait 5 seconds before submitting again.', 'error');
+      if (timePassed < cooldownTime) {
+        displayMessage('Please wait before submitting again.', 'error');
+        startCooldown(cooldownTime - timePassed);
         return;
       }
 
-      // Check webhook name first
       try {
         const webhookData = await fetch(webhookUrl, { method: 'GET' });
         const webhookJson = await webhookData.json();
@@ -117,13 +131,8 @@
         return;
       }
 
-      // Begin cooldown
-      cooldown = true;
-      button.disabled = true;
-      setTimeout(() => {
-        cooldown = false;
-        button.disabled = false;
-      }, 5000);
+      localStorage.setItem('lastSent', now.toString());
+      startCooldown(cooldownTime);
 
       const payload = {
         content: idea,
@@ -133,14 +142,12 @@
       try {
         const response = await fetch(webhookUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
 
         if (response.ok) {
-          displayMessage('Idea submitted successfully!', 'success');
+          displayMessage('Idea submitted successfully!', 'message');
         } else {
           displayMessage('Failed to submit idea. Try again later.', 'error');
         }
@@ -152,9 +159,37 @@
     }
 
     function displayMessage(message, type) {
-      const messageBox = document.getElementById('messageBox');
-      messageBox.innerHTML = `<div class="${type}">${message}</div>`;
+      const box = document.getElementById('messageBox');
+      box.innerHTML = `<div class="${type}">${message}</div>`;
     }
+
+    function startCooldown(timeLeft) {
+      button.disabled = true;
+      button.classList.add('cooldown');
+
+      let secondsLeft = Math.ceil(timeLeft / 1000);
+      button.textContent = `Wait (${secondsLeft})`;
+
+      const interval = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+          clearInterval(interval);
+          button.disabled = false;
+          button.classList.remove('cooldown');
+          button.textContent = 'Submit Your Idea';
+        } else {
+          button.textContent = `Wait (${secondsLeft})`;
+        }
+      }, 1000);
+    }
+
+    // On load, check if cooldown still exists
+    window.onload = () => {
+      const remaining = getRemainingCooldown();
+      if (remaining > 0) {
+        startCooldown(remaining);
+      }
+    };
   </script>
 </body>
 </html>
