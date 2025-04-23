@@ -87,6 +87,8 @@
 
     <script>
       let countdownInterval; // Store countdown interval
+      let clickCount = 0; // Track the number of clicks
+      let firstClickTime = 0; // Time of the first click
 
       async function sendMessage() {
         const input = document.getElementById('messageInput');
@@ -94,10 +96,30 @@
         const sendButton = document.getElementById('sendButton');
         const countdownElement = document.getElementById('countdown');
 
-        // Check if 5 seconds have passed since the last message
-        const lastMessageTime = localStorage.getItem('lastMessageTime');
         const currentTime = Date.now();
 
+        // Track the time of the first click
+        if (clickCount === 0) {
+          firstClickTime = currentTime;
+        }
+
+        // Increment the click count
+        clickCount++;
+
+        // Check if the button was clicked more than once within 4.5 seconds
+        if (clickCount > 1 && currentTime - firstClickTime < 4500) {
+          // If clicked multiple times within 4.5 seconds, reload the page
+          location.reload();
+          return;
+        }
+
+        // If 4.5 seconds have passed, reset the click count
+        if (currentTime - firstClickTime >= 4500) {
+          clickCount = 1; // Reset click count to 1 (first click)
+        }
+
+        // Check if 5 seconds have passed since the last message
+        const lastMessageTime = localStorage.getItem('lastMessageTime');
         if (!message) return; // Don't send if message is empty
 
         if (lastMessageTime && currentTime - lastMessageTime < 5000) {
