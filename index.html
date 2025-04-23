@@ -70,18 +70,29 @@
       .send-btn:hover:not(.disabled) {
         background-color: #00ffb3;
       }
+
+      /* Countdown timer on the button */
+      .countdown {
+        font-size: 14px;
+        margin-left: 10px;
+      }
     </style>
   </head>
   <body>
     <h1>Send a Message</h1>
     <input type="text" id="messageInput" class="cool-textbox" placeholder="Type your message...">
-    <button class="send-btn" id="sendButton" onclick="sendMessage()">Send to Discord</button>
+    <button class="send-btn" id="sendButton" onclick="sendMessage()">
+      Send to Discord <span class="countdown" id="countdown"></span>
+    </button>
 
     <script>
+      let countdownInterval; // Store countdown interval
+
       async function sendMessage() {
         const input = document.getElementById('messageInput');
         const message = input.value.trim();
         const sendButton = document.getElementById('sendButton');
+        const countdownElement = document.getElementById('countdown');
 
         // Check if 5 seconds have passed since the last message
         const lastMessageTime = localStorage.getItem('lastMessageTime');
@@ -91,9 +102,22 @@
 
         if (lastMessageTime && currentTime - lastMessageTime < 5000) {
           sendButton.classList.add('disabled'); // Disable the button and make it red
-          setTimeout(() => {
-            sendButton.classList.remove('disabled'); // Re-enable the button after 5 seconds
-          }, 5000);
+          
+          let countdown = 5; // Start countdown from 5 seconds
+          countdownElement.textContent = `(${countdown}s)`; // Show countdown on the button
+
+          // Countdown every second
+          countdownInterval = setInterval(() => {
+            countdown--;
+            countdownElement.textContent = `(${countdown}s)`; // Update countdown on the button
+
+            if (countdown <= 0) {
+              clearInterval(countdownInterval); // Stop the countdown
+              sendButton.classList.remove('disabled'); // Re-enable the button
+              countdownElement.textContent = ''; // Clear countdown
+            }
+          }, 1000);
+
           return; // Block sending the message
         }
 
