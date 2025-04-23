@@ -3,21 +3,38 @@
   <head>
     <title>cool_discord_sender.com</title>
     <style>
+      /* Full-screen background with animated gradient */
       body {
         margin: 0;
         padding: 0;
-        background-color: #1e1e1e;
-        color: white;
         font-family: Arial, sans-serif;
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
         flex-direction: column;
+        background: linear-gradient(45deg, #ff0044, #00b7ff, #7a00ff, #ffb700);
+        background-size: 400% 400%;
+        animation: gradientAnimation 10s ease infinite;
+        color: white;
+      }
+
+      /* Animation for smooth gradient transition */
+      @keyframes gradientAnimation {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
       }
 
       h1 {
         margin-bottom: 20px;
+        text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
       }
 
       .cool-textbox {
@@ -41,11 +58,17 @@
         font-size: 16px;
         border-radius: 8px;
         cursor: pointer;
+        transition: background-color 0.3s ease;
       }
 
       .send-btn.disabled {
         background-color: #ff4d4d; /* Red if disabled */
         cursor: not-allowed;
+      }
+
+      /* Button hover effect */
+      .send-btn:hover:not(.disabled) {
+        background-color: #00ffb3;
       }
     </style>
   </head>
