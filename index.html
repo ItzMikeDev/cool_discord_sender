@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>cool_discord_sender.com</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #1e1e1e;
+        color: white;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+      }
+
+      h1 {
+        margin-bottom: 20px;
+      }
+
+      .cool-textbox {
+        padding: 10px 15px;
+        border: 4px solid #00ffd5;
+        border-radius: 10px;
+        background-color: #2b2b2b;
+        color: white;
+        font-size: 16px;
+        width: 300px;
+        outline: none;
+        margin-bottom: 10px;
+      }
+
+      .send-btn {
+        padding: 10px 20px;
+        border: none;
+        background-color: #00ffd5;
+        color: #1e1e1e;
+        font-weight: bold;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Send a Message</h1>
+    <input type="text" id="messageInput" class="cool-textbox" placeholder="Type your message...">
+    <button class="send-btn" onclick="sendMessage()">Send to Discord</button>
+
+    <script>
+      async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        const webhookUrl = "https://discord.com/api/webhooks/1364620178364698797/jMHl4TvsOul2130KcWBw4UcPc5cLRw0nIRHaRYUvt-gv5BBWMoqcmDSsyXqSHKlzCUFS";
+
+        try {
+          await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: message })
+          });
+          input.value = '';
+        } catch (err) {
+          console.error("Failed to send message", err);
+        }
+      }
+
+      document.getElementById('messageInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') sendMessage();
+      });
+    </script>
+  </body>
+</html>
