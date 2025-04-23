@@ -1,141 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ideas Thingy</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #2a2a2a;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        h1 {
-            font-size: 2em;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #ideaBox {
-            padding: 20px;
-            width: 80%;
-            max-width: 600px;
-            background-color: #333;
-            border-radius: 5px;
-            border: 2px solid #444;
-            color: white;
-            font-size: 1.2em;
-            text-align: center;
-        }
-        #ideaBox input, #ideaBox button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: none;
-        }
-        #ideaBox input {
-            font-size: 1.1em;
-        }
-        #ideaBox button {
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-            font-size: 1.2em;
-        }
-        #ideaBox button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        .message {
-            color: green;
-            font-size: 1.2em;
-            padding: 10px;
-            margin-top: 20px;
-        }
-        .error {
-            color: red;
-            font-size: 1.2em;
-            padding: 10px;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ideas Thingy</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #2a2a2a;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 2em;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #ideaBox {
+      padding: 20px;
+      width: 80%;
+      max-width: 600px;
+      background-color: #333;
+      border-radius: 5px;
+      border: 2px solid #444;
+      color: white;
+      font-size: 1.2em;
+      text-align: center;
+    }
+
+    #ideaBox input,
+    #ideaBox button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+    }
+
+    #ideaBox input {
+      font-size: 1.1em;
+    }
+
+    #ideaBox button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      font-size: 1.2em;
+    }
+
+    #ideaBox button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .message {
+      color: green;
+      font-size: 1.2em;
+      padding: 10px;
+      margin-top: 20px;
+    }
+
+    .error {
+      color: red;
+      font-size: 1.2em;
+      padding: 10px;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-    <div>
-        <h1>Ideas Thingy</h1>
-        <div id="ideaBox">
-            <input type="text" id="ideaInput" placeholder="Type your idea here..." />
-            <button id="submitButton" onclick="submitIdea()">Submit Your Idea</button>
-        </div>
-        <div id="messageBox"></div>
+  <div>
+    <h1>Ideas Thingy</h1>
+    <div id="ideaBox">
+      <input type="text" id="ideaInput" placeholder="Type your idea here..." />
+      <button id="submitButton" onclick="submitIdea()">Submit Your Idea</button>
     </div>
+    <div id="messageBox"></div>
+  </div>
 
-    <script>
-        const webhookUrl = 'https://discord.com/api/webhooks/1364630699386208346/aUvPjJNe288hDvEOcfQ2rEGcADu28kveRSGrZAr8dTEABgCNdu1pIQPS1a3q6qqPFDDY'; // Your webhook URL
-        let cooldown = false;
+  <script>
+    const webhookUrl = 'https://discord.com/api/webhooks/1364630699386208346/aUvPjJNe288hDvEOcfQ2rEGcADu28kveRSGrZAr8dTEABgCNdu1pIQPS1a3q6qqPFDDY';
+    let cooldown = false;
 
-        async function submitIdea() {
-            const input = document.getElementById('ideaInput');
-            const idea = input.value.trim();
+    async function submitIdea() {
+      const input = document.getElementById('ideaInput');
+      const idea = input.value.trim();
+      const button = document.getElementById('submitButton');
 
-            if (!idea) {
-                displayMessage('Please enter a valid idea!', 'error');
-                return;
-            }
+      if (!idea) {
+        displayMessage('Please enter a valid idea!', 'error');
+        return;
+      }
 
-            if (cooldown) {
-                displayMessage('Please wait 5 seconds before submitting again.', 'error');
-                return;
-            }
+      if (cooldown) {
+        displayMessage('Please wait 5 seconds before submitting again.', 'error');
+        return;
+      }
 
-            // Disable the button to prevent multiple submissions
-            const button = document.getElementById('submitButton');
-            button.disabled = true;
+      // Check webhook name first
+      try {
+        const webhookData = await fetch(webhookUrl, { method: 'GET' });
+        const webhookJson = await webhookData.json();
 
-            // Show a cooldown warning
-            cooldown = true;
-            setTimeout(() => {
-                cooldown = false;
-                button.disabled = false;
-            }, 5000); // 5 seconds cooldown
-
-            // Send the idea to Discord via Webhook
-            const payload = {
-                content: idea,
-                username: 'Idea Submitter', // Optional: Customize the bot's username
-            };
-
-            try {
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                });
-
-                if (response.ok) {
-                    displayMessage('Idea submitted successfully!', 'success');
-                } else {
-                    displayMessage('Failed to submit idea. Try again later.', 'error');
-                }
-            } catch (err) {
-                displayMessage('An error occurred. Please try again later.', 'error');
-            }
-
-            // Clear input field after submission
-            input.value = '';
+        if (webhookJson.name.toLowerCase() !== 'enabled') {
+          displayMessage('The idea box is currently disabled.', 'error');
+          return;
         }
+      } catch (err) {
+        displayMessage('Could not verify webhook. Try again later.', 'error');
+        return;
+      }
 
-        function displayMessage(message, type) {
-            const messageBox = document.getElementById('messageBox');
-            messageBox.innerHTML = `<div class="${type}">${message}</div>`;
+      // Begin cooldown
+      cooldown = true;
+      button.disabled = true;
+      setTimeout(() => {
+        cooldown = false;
+        button.disabled = false;
+      }, 5000);
+
+      const payload = {
+        content: idea,
+        username: 'Idea Submitter',
+      };
+
+      try {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          displayMessage('Idea submitted successfully!', 'success');
+        } else {
+          displayMessage('Failed to submit idea. Try again later.', 'error');
         }
-    </script>
+      } catch (err) {
+        displayMessage('An error occurred. Please try again later.', 'error');
+      }
+
+      input.value = '';
+    }
+
+    function displayMessage(message, type) {
+      const messageBox = document.getElementById('messageBox');
+      messageBox.innerHTML = `<div class="${type}">${message}</div>`;
+    }
+  </script>
 </body>
 </html>
