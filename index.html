@@ -3,193 +3,143 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ideas Thingy</title>
+  <title>ideas thingy</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(-45deg, #2a2a2a, #1e1e1e, #333, #2c2c2c);
-      background-size: 400% 400%;
-      animation: gradientBG 8s ease infinite;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
+      padding: 0;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(270deg, #23272a, #2c2f33, #23272a);
+      background-size: 600% 600%;
+      animation: bgShift 15s ease infinite;
     }
 
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    @keyframes bgShift {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+
+    .container {
+      text-align: center;
+      color: white;
     }
 
     h1 {
-      font-size: 2em;
-      text-align: center;
       margin-bottom: 20px;
     }
 
-    #ideaBox {
-      padding: 20px;
-      width: 90%;
-      max-width: 600px;
-      background-color: #333;
+    input[type="text"] {
+      padding: 12px;
+      border: 3px solid #7289da;
       border-radius: 8px;
-      border: 3px solid #666;
-      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      background-color: #2c2f33;
       color: white;
-      text-align: center;
+      width: 250px;
+      font-size: 16px;
+      outline: none;
     }
 
-    #ideaBox input,
-    #ideaBox button {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
+    button {
+      margin-left: 10px;
+      padding: 12px 16px;
       border: none;
-    }
-
-    #ideaBox input {
-      font-size: 1.1em;
-    }
-
-    #ideaBox button {
-      background-color: #4CAF50;
+      background-color: #7289da;
       color: white;
+      font-weight: bold;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 1.2em;
+      transition: background 0.2s;
     }
 
-    #ideaBox button.cooldown {
-      background-color: #a33;
-    }
-
-    .message {
-      color: green;
-      font-size: 1.1em;
-      padding-top: 10px;
-    }
-
-    .error {
-      color: red;
-      font-size: 1.1em;
-      padding-top: 10px;
+    button.cooldown {
+      background-color: #c0392b !important;
     }
   </style>
 </head>
 <body>
-  <div>
-    <h1>Ideas Thingy</h1>
-    <div id="ideaBox">
-      <input type="text" id="ideaInput" placeholder="Type your idea here..." />
-      <button id="submitButton" onclick="submitIdea()">Submit Your Idea</button>
-    </div>
-    <div id="messageBox"></div>
+  <div class="container">
+    <h1>ideas thingy</h1>
+    <form id="ideaForm">
+      <input type="text" id="ideaInput" placeholder="submit your idea..." required />
+      <button id="submitBtn" type="submit">Submit</button>
+    </form>
   </div>
 
   <script>
-    const webhookUrl = 'https://discord.com/api/webhooks/1364630699386208346/aUvPjJNe288hDvEOcfQ2rEGcADu28kveRSGrZAr8dTEABgCNdu1pIQPS1a3q6qqPFDDY';
-    const cooldownTime = 5000;
-    const button = document.getElementById('submitButton');
+    const form = document.getElementById('ideaForm');
+    const input = document.getElementById('ideaInput');
+    const button = document.getElementById('submitBtn');
 
-    function getRemainingCooldown() {
-      const lastSent = parseInt(localStorage.getItem('lastSent') || '0');
-      const now = Date.now();
-      return Math.max(0, cooldownTime - (now - lastSent));
+    let lastSubmitTime = 0;
+    let clickCount = 0;
+
+    const bannedWords = ['nigga', 'nigger', 'fuck', 'shit', 'bitch', 'asshole', 'cunt', 'faggot'];
+
+    function containsBannedWords(text) {
+      const lower = text.toLowerCase();
+      return bannedWords.some(word => lower.includes(word));
     }
 
-    async function submitIdea() {
-      const input = document.getElementById('ideaInput');
-      const idea = input.value.trim();
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
       const now = Date.now();
-      const lastSent = parseInt(localStorage.getItem('lastSent') || '0');
-      const timePassed = now - lastSent;
-
-      if (!idea) {
-        displayMessage('Please enter a valid idea!', 'error');
-        return;
-      }
-
-      if (timePassed < cooldownTime) {
-        displayMessage('Please wait before submitting again.', 'error');
-        startCooldown(cooldownTime - timePassed);
-        return;
-      }
-
-      try {
-        const webhookData = await fetch(webhookUrl, { method: 'GET' });
-        const webhookJson = await webhookData.json();
-
-        if (webhookJson.name.toLowerCase() !== 'enabled') {
-          displayMessage('The idea box is currently disabled.', 'error');
+      if (now - lastSubmitTime < 5000) {
+        clickCount++;
+        if (clickCount > 1) {
+          location.reload(); // Spam protection
           return;
         }
-      } catch (err) {
-        displayMessage('Could not verify webhook. Try again later.', 'error');
+        button.classList.add('cooldown');
+        button.innerText = 'Cooldown...';
+        setTimeout(() => {
+          button.classList.remove('cooldown');
+          button.innerText = 'Submit';
+        }, 1000);
         return;
       }
 
-      localStorage.setItem('lastSent', now.toString());
-      startCooldown(cooldownTime);
+      const idea = input.value.trim();
+      if (!idea) return;
 
-      const payload = {
-        content: idea,
-        username: 'Idea Submitter',
-      };
+      if (containsBannedWords(idea)) {
+        alert("Your idea contains inappropriate language.");
+        return;
+      }
 
       try {
-        const response = await fetch(webhookUrl, {
+        // Replace with your actual webhook or handle in backend
+        await fetch('/api/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ message: idea }),
         });
 
-        if (response.ok) {
-          displayMessage('Idea submitted successfully!', 'message');
-        } else {
-          displayMessage('Failed to submit idea. Try again later.', 'error');
-        }
+        input.value = '';
+        lastSubmitTime = now;
+        clickCount = 0;
+
+        let countdown = 5;
+        const interval = setInterval(() => {
+          countdown--;
+          button.innerText = `Wait (${countdown})`;
+          if (countdown <= 0) {
+            clearInterval(interval);
+            button.innerText = 'Submit';
+          }
+        }, 1000);
       } catch (err) {
-        displayMessage('An error occurred. Please try again later.', 'error');
+        button.innerText = 'Error';
+        setTimeout(() => {
+          button.innerText = 'Submit';
+        }, 2000);
       }
-
-      input.value = '';
-    }
-
-    function displayMessage(message, type) {
-      const box = document.getElementById('messageBox');
-      box.innerHTML = `<div class="${type}">${message}</div>`;
-    }
-
-    function startCooldown(timeLeft) {
-      button.disabled = true;
-      button.classList.add('cooldown');
-
-      let secondsLeft = Math.ceil(timeLeft / 1000);
-      button.textContent = `Wait (${secondsLeft})`;
-
-      const interval = setInterval(() => {
-        secondsLeft--;
-        if (secondsLeft <= 0) {
-          clearInterval(interval);
-          button.disabled = false;
-          button.classList.remove('cooldown');
-          button.textContent = 'Submit Your Idea';
-        } else {
-          button.textContent = `Wait (${secondsLeft})`;
-        }
-      }, 1000);
-    }
-
-    // On load, check if cooldown still exists
-    window.onload = () => {
-      const remaining = getRemainingCooldown();
-      if (remaining > 0) {
-        startCooldown(remaining);
-      }
-    };
+    });
   </script>
 </body>
 </html>
